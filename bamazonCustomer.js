@@ -12,20 +12,19 @@ var connection = mysql.createConnection({
 
 connection.connect();
 
-connection.query("SELECT * FROM products", function (error, results, fields){
-    var table = new Table({
-        head: [fields[0].name, fields[1].name, fields[2].name, fields[3].name, fields[4].name],
-        colWidths: [9, 22, 22, 9, 15]
+function loadTable(){
+    connection.query("SELECT * FROM products", function (error, results, fields){
+        var table = new Table({
+            head: [fields[0].name, fields[1].name, fields[2].name, fields[3].name, fields[4].name],
+            colWidths: [9, 22, 22, 9, 15]
+        });
+
+        for (var i = 0; i < results.length; i++){
+            table.push([results[i].item_id, results[i].product_name, results[i].department_name, results[i].price, results[i].stock_quantity]);
+        }
+        console.log(table.toString());
     });
-
-    // table.push([results[0].item_id, results[0].product_name, results[0].department_name, results[0].price, results[0].stock_quantity]);
-    for (var i = 0; i < results.length; i++){
-        table.push([results[i].item_id, results[i].product_name, results[i].department_name, results[i].price, results[i].stock_quantity]);
-    }
-    console.log(table.toString());
-});
-
-connection.end();
+}
 
 function run(){
     inquirer.prompt([
@@ -37,25 +36,22 @@ function run(){
             name: "quantity",
             message: "how many would you like to buy? "
         }
-    ]).then(function(answers){
-        results.stock_quantity -= answers.stock_quantity;
-        // console.log(answers.id);
-        // console.log(answers.quantity);
-        
-        connection.query("UPDATE products SET stock_quantity="+results.stock_quantity + "WHERE id=" + answers.id);
-
-        // connection.query("SELECT * FROM products", function (error, results, fields){
-        //     console.log(fields[0].name,"  "+ fields[1].name,"  "+  fields[2].name,"  "+  fields[3].name,"  "+  fields[4].name);
-        //     if (error) {
-        //         throw error;
-        //     }
-
-        //     for (var i = 0; i < results.length; i++){
-        //         console.log(results[i].item_id, results[i].product_name, results[i].department_name, results[i].price, results[i].stock_quantity);
-        //     }
-            
-        // });
+    ]).then(function(answer){
+        connection.query("SELECT stock_quantity FROM products WHERE ?", [{
+            item_id: answer.id
+        }], function(err, res){
+            // console.log(res[0].stock_quantity);
+            var stockUpdate = res[0].stock_quantity - answer.quantity;
+            connection.query("UPDATE products SET ? WHERE ?", [{
+                stock_quantity: stockUpdate
+            },
+            {
+                item_id: answer.id
+            }])
+            loadTable();
+            run();
+        });
     })
 }
-
+loadTable();
 setTimeout(run, 500);
