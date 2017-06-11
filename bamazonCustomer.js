@@ -42,7 +42,14 @@ function run(){
         }], function(err, res){
             var stockUpdate = res[0].stock_quantity - answer.quantity;
 
-            if (answer.quantity >= res[0].stock_quantity || answer.quantity <= 0){
+            // why does this not work?
+            if (answer.id === 0 || answer.id > 10){
+                console.log("\ninvalid input");
+                setTimeout(loadTable, 2000);
+                setTimeout(run, 2500);
+            }
+
+            else if (answer.quantity >= res[0].stock_quantity || answer.quantity <= 0){
                 console.log("\ninvalid input");
                 setTimeout(loadTable, 2000);
                 setTimeout(run, 2500);
