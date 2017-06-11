@@ -40,16 +40,25 @@ function run(){
         connection.query("SELECT stock_quantity FROM products WHERE ?", [{
             item_id: answer.id
         }], function(err, res){
-            // console.log(res[0].stock_quantity);
             var stockUpdate = res[0].stock_quantity - answer.quantity;
-            connection.query("UPDATE products SET ? WHERE ?", [{
+
+            if (answer.quantity >= res[0].stock_quantity || answer.quantity <= 0){
+                console.log("\ninvalid input");
+                setTimeout(loadTable, 2000);
+                setTimeout(run, 2500);
+            }
+
+            else {
+                connection.query("UPDATE products SET ? WHERE ?", [{
                 stock_quantity: stockUpdate
-            },
-            {
-                item_id: answer.id
-            }])
-            loadTable();
-            run();
+                },
+                {
+                    item_id: answer.id
+                }])
+                console.log("purchase Successfull!")
+                setTimeout(loadTable, 2000);
+                setTimeout(run, 2500);
+            }
         });
     })
 }
